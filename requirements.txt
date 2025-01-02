@@ -2,3 +2,4 @@ requests
 vaderSentiment
 nltk
 transformers
+python-dotenv

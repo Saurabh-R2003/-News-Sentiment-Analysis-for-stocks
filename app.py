@@ -1,9 +1,18 @@
+import os
+import logging
+from dotenv import load_dotenv
 import requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from preprocessing.text_cleaning import remove_special_characters
 from preprocessing.tokenization import tokenize_and_remove_stopwords
 from preprocessing.lemmatization import lemmatize_tokens
 from transformers import pipeline 
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 def preprocess_text(text):
     text = remove_special_characters(text)
@@ -13,15 +22,15 @@ def preprocess_text(text):
 
 def fetch_news(api_key, query, num_articles=10):
     url = f"https://newsapi.org/v2/everything?q={query}&language=en&pageSize={num_articles}&apiKey={api_key}"
-    response = requests.get(url)
-    if response.status_code == 200:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
         articles = response.json().get("articles", [])
         return [{"title": article["title"], "description": article["description"], "url": article["url"]} 
                 for article in articles if article["title"] and article["description"]]
-    else:
-        print("Error fetching news:", response.status_code, response.text)
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching news: {e}")
         return []
-
 
 def analyze_sentiment_vader(text):
     analyzer = SentimentIntensityAnalyzer()
@@ -56,11 +65,12 @@ def classify_rating(score):
 
 
 if __name__ == "__main__":
-    
-    API_KEY = "d810af79c6324f16957d749f329b51f0"
-    QUERY = input("Enter company name: ")
+    API_KEY = os.getenv("API_KEY")
+    if not API_KEY:
+        logging.error("API key not found. Please set it in the .env file.")
+        exit(1)
 
-   
+    QUERY = input("Enter company name: ")
     articles = fetch_news(API_KEY, QUERY)
     scores = []
     for article in articles:
@@ -78,18 +88,11 @@ if __name__ == "__main__":
         rating = classify_rating(normalized_score)
         scores.append(normalized_score)
 
-        print(f"Original Article Title: {article['title']}")
-        print(f"Summary: {article['description']}")
-        print(f"Link: {article['url']}")
-        print(f"Cleaned Text: {cleaned_text}")
-        print(f"Sentiment Score: {sentiment_score:.2f}")
-        print(f"Normalized Score: {normalized_score}")
-        print(f"Rating: {rating}")
-        print("-" * 50)
+        logging.info(f"Article: {article['title']}\nRating: {rating}\n")
 
  
     if scores:
         average_score = sum(scores) / len(scores)
         overall_rating = classify_rating(average_score)
-        print(f"Average Sentiment Score: {average_score:.2f}")
-        print(f"Overall Rating: {overall_rating}")
+        logging.info(f"Average Sentiment Score: {average_score:.2f}")
+        logging.info(f"Overall Rating: {overall_rating}")
