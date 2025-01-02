@@ -57,7 +57,7 @@ def classify_rating(score):
 
 if __name__ == "__main__":
     
-    API_KEY = "d810af79c6324f16957d749f329b51f0"
+    API_KEY = <YOUR API KEY>
     QUERY = input("Enter company name: ")
 
    
