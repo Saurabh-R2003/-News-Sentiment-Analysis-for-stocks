@@ -1,4 +1,4 @@
-# NewsSentimentAnalysisforStocks
+# News_Sentiment_Analysis_for_Stocks
 
 This project fetches news articles related to a specific stock and analyzes their sentiment using both VADER and FinBERT sentiment analysis models. The sentiment scores are then normalized and classified into ratings.
 
